@@ -1,17 +1,19 @@
-FROM ubuntu:latest
+FROM ubuntu:latest AS build
 
-# Atualiza e instala dependências necessárias
-RUN apt-get update && \
-    apt-get install -y openjdk-17-jdk maven
 
-# Define diretório de trabalho
-WORKDIR /app
+RUN apt-get update 
+RUN apt-get install openjdk-17-jdk -y
 
-# Copia os arquivos do projeto para o container
+
 COPY . .
 
-# Compila o projeto com Maven
+RUN apt-get install maven -y
 RUN mvn clean install
 
-# Define o comando padrão (ajuste o nome do .jar gerado abaixo)
-CMD ["java", "-jar", "/target/todolist-1.0.0.jar"]
+FROM openjdk:17-jdk-slim
+EXPOSE 8080
+
+COPY --from=build /target/todolist-1.0.0.jar app.jar
+
+
+ENTRYPOINT [ "java", "-jar", "app.jar" ]
